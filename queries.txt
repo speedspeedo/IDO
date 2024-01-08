@@ -1,0 +1,77 @@
+ORAI_HOME_DIR=$HOME/yodan/.oraid
+KEY_NAME=yodan
+
+oraid start --home=$ORAI_HOME_DIR --minimum-gas-prices=0orai
+
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/rust-optimizer:0.12.11
+
+RES=$(oraid tx wasm store artifacts/ido.wasm --from $KEY_NAME --gas auto --gas-adjustment 1.3 -y --home $ORAI_HOME_DIR)
+
+IDO_CODE_ID=$(echo $RES | jq -r '.logs[0].events[-1].attributes[-1].value')
+
+echo $IDO_CODE_ID
+
+RES=$(oraid tx wasm instantiate                     \
+    "$IDO_CODE_ID"                                  \
+    '{
+        "lock_periods": [1, 1, 1, 1, 1],
+        "nft_contract": "'"${NFT_ADDRESS}"'",
+        "tier_contract":"orai1q44nqkfcude7je0tqhu0u8mm7x8uhgj73n94k2vkx87tsr6yaujsmyayet"
+    }'                                               \
+    --gas auto                                    \
+    --gas-adjustment 1.1          \
+    --gas-prices 0.1orai     \
+    --no-admin     \
+    --from "$KEY_NAME"                                 \
+    --label "YOUI"                            \
+    -y --home $ORAI_HOME_DIR)
+
+IDO_CONTRACT=$(echo $RES | jq -r '.logs[0].events[0].attributes[0].value')
+
+echo $IDO_CONTRACT
+
+oraid tx wasm execute "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas" '{"increase_allowance":{"spender":"'"$IDO_CONTRACT"'","amount":"10000000"}}' --from="$KEY_NAME" -b block --gas auto --gas-adjustment 1.1 --home $ORAI_HOME_DIR -y
+
+oraid tx wasm execute "$IDO_CONTRACT" \
+    '{
+  "start_ido": {
+    "start_time": 1704709523,
+    "end_time": 1704709949,
+    "total_amount": "1000000",
+    "tokens_per_tier": [
+      "400000000000",
+      "300000000000",
+      "150000000000",
+      "100000000000",
+      "50000000000"
+    ],
+    "price": "50",
+    "token_contract": "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas",
+    "payment": "native",
+    "whitelist": {
+      "shared": {}
+    },
+    "soft_cap": "500000"
+  }
+}'   \
+--gas auto                                    \
+    --gas-adjustment 1.1          \
+    --from "$KEY_NAME"                                 \
+    --home $ORAI_HOME_DIR --yes
+
+
+
+oraid tx wasm execute "$IDO_CONTRACT" \
+'{
+    "buy_tokens" : {
+        "amount" : 100,
+        "ido_id" : 0
+    }
+}' \
+--gas auto                                    \
+    --gas-adjustment 1.1          \
+    --from "$KEY_NAME"                                 \
+    --amount 100 --home $ORAI_HOME_DIR --yes
