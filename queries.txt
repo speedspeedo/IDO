@@ -18,7 +18,7 @@ RES=$(oraid tx wasm instantiate                     \
     "$IDO_CODE_ID"                                  \
     '{
         "lock_periods": [1, 1, 1, 1, 1],
-        "nft_contract": "'"${NFT_ADDRESS}"'",
+        "nft_contract": "orai1rmqthdyqs03faugttrt6kkm2u73pwfr86aqe6s6jvlwq4wqdp6vqsve3m4",
         "tier_contract":"orai1q44nqkfcude7je0tqhu0u8mm7x8uhgj73n94k2vkx87tsr6yaujsmyayet"
     }'                                               \
     --gas auto                                    \
@@ -35,11 +35,15 @@ echo $IDO_CONTRACT
 
 oraid tx wasm execute "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas" '{"increase_allowance":{"spender":"'"$IDO_CONTRACT"'","amount":"10000000"}}' --from="$KEY_NAME" -b block --gas auto --gas-adjustment 1.1 --home $ORAI_HOME_DIR -y
 
+date -d "now + 10 minutes" +%s
+
+date +%s
+
 oraid tx wasm execute "$IDO_CONTRACT" \
     '{
   "start_ido": {
-    "start_time": 1704709523,
-    "end_time": 1704709949,
+    "start_time": '"$(date -d "now - 1 minutes" +%s)"',
+    "end_time": '"$(date -d "now + 1 minutes" +%s)"',
     "total_amount": "1000000",
     "tokens_per_tier": [
       "400000000000",
@@ -54,7 +58,7 @@ oraid tx wasm execute "$IDO_CONTRACT" \
     "whitelist": {
       "shared": {}
     },
-    "soft_cap": "500000"
+    "soft_cap": "1000"
   }
 }'   \
 --gas auto                                    \
@@ -67,11 +71,33 @@ oraid tx wasm execute "$IDO_CONTRACT" \
 oraid tx wasm execute "$IDO_CONTRACT" \
 '{
     "buy_tokens" : {
-        "amount" : 100,
-        "ido_id" : 0
+        "amount" : "100",
+        "ido_id" : 1
     }
 }' \
 --gas auto                                    \
     --gas-adjustment 1.1          \
     --from "$KEY_NAME"                                 \
-    --amount 100 --home $ORAI_HOME_DIR --yes
+    --amount 5000orai --home $ORAI_HOME_DIR --yes
+
+oraid tx wasm execute "$IDO_CONTRACT" \
+'{
+    "recv_tokens" : {
+        "amount" : "25000",
+        "ido_id" : 1
+    }
+}' \
+--gas auto                                    \
+    --gas-adjustment 1.1          \
+    --from "$KEY_NAME"                                 \
+    --home $ORAI_HOME_DIR --yes
+
+oraid q wasm contract-state smart "$IDO_CONTRACT" '{"ido_info": {"ido_id": 4}}' --home $ORAI_HOME_DIR
+
+oraid q wasm contract-state smart "$IDO_CONTRACT" '{"user_info": {"address": "'"$WALLET_ADDRESS"'", "ido_id" : 4}}' --home $ORAI_HOME_DIR
+
+oraid q wasm contract-state smart "$IDO_CONTRACT" '{"ido_amount": {}}' --home $ORAI_HOME_DIR
+
+oraid q wasm contract-state smart "$IDO_CONTRACT" '{"purchases": {"address": "'"$WALLET_ADDRESS"'", "ido_id" : 2}}' --home $ORAI_HOME_DIR
+
+oraid q bank balances "$IDO_CONTRACT" --home $ORAI_HOME_DIR

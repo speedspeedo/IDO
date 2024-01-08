@@ -425,6 +425,7 @@ fn recv_tokens(
             .total_payment
             .checked_sub(user_ido_info.total_tokens_bought)
             .unwrap_or_default();
+        let refund_amount = user_ido_info.total_payment;
         user_ido_info.total_tokens_received = 0;
         user_ido_info.total_tokens_bought = 0;
         user_ido_info.total_payment = 0;
@@ -443,7 +444,7 @@ fn recv_tokens(
         if ido.is_native_payment() {
             let transfer_msg = CosmosMsg::Bank(BankMsg::Send {
                 to_address: info.sender.to_string(),
-                amount: coins(user_ido_info.total_payment, ORAI),
+                amount: coins(refund_amount, ORAI),
             });
             return Ok(Response::new().set_data(answer).add_message(transfer_msg));
             
@@ -551,9 +552,8 @@ fn recv_tokens(
 
     let token_contract = ido.token_contract.to_string();
 
-    let transfer_msg = Cw20ExecuteMsg::TransferFrom { 
-        owner: info.sender.to_string(), 
-        recipient: env.contract.address.to_string(),
+    let transfer_msg = Cw20ExecuteMsg::Transfer { 
+        recipient: info.sender.to_string(),
         amount: Uint128::new(recv_amount)
     };
 
