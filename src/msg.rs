@@ -1,6 +1,6 @@
 use cosmwasm_std::Uint128;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{ Deserialize, Serialize };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -182,6 +182,9 @@ pub enum QueryMsg {
         address: String,
         ido_id: Option<u32>,
     },
+    TierInfo {
+        address: String,
+    },
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
@@ -244,6 +247,3 @@ pub enum QueryResponse {
         nft_tier: u8,
     },
 }
-
-
-

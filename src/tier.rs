@@ -1,16 +1,13 @@
 mod query {
-    use crate::{ msg::{ContractStatus, ValidatorWithWeight}, state::Config};
-    use cosmwasm_std::{ StdError, StdResult,  Uint128, DepsMut};
-    use cw721::{
-        AllNftInfoResponse, 
-        TokensResponse, Cw721QueryMsg,
-    };
+    use crate::{ msg::{ ContractStatus, ValidatorWithWeight }, state::Config };
+    use cosmwasm_std::{ StdError, StdResult, Uint128, DepsMut, Deps };
+    use cw721::{ AllNftInfoResponse, TokensResponse, Cw721QueryMsg };
     use schemars::JsonSchema;
     // use secret_toolkit_snip721::{
     //     all_nft_info_query, private_metadata_query, tokens_query, Extension, Metadata, ViewerInfo,
     // };
-    
-    use serde::{Deserialize, Serialize};
+
+    use serde::{ Deserialize, Serialize };
 
     #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
     pub struct Trait {
@@ -38,7 +35,9 @@ mod query {
     #[serde(rename_all = "snake_case")]
     pub enum TierContractQuery {
         Config {},
-        UserInfo { address: String },
+        UserInfo {
+            address: String,
+        },
     }
 
     // impl Query for TierContractQuery {
@@ -83,23 +82,28 @@ mod query {
     }
 
     pub fn get_tier_from_nft_contract(
-        deps: &DepsMut,
+        deps: &Deps,
         address: &String,
-        config: &Config,
+        config: &Config
     ) -> StdResult<Option<u8>> {
         let nft_contract = config.nft_contract.to_string();
 
         let msg = Cw721QueryMsg::Tokens { owner: address.clone(), start_after: None, limit: None };
 
-        let tokensresponse:TokensResponse =  deps.querier.query_wasm_smart(nft_contract, &msg)?;
-        
+        let tokensresponse: TokensResponse = deps.querier.query_wasm_smart(nft_contract, &msg)?;
+
         let token_list = tokensresponse.tokens.iter();
         let mut result_tier = 5;
         for token_id in token_list {
             let nft_contract = config.nft_contract.to_string();
-            let msg = Cw721QueryMsg::AllNftInfo { token_id: token_id.clone(), include_expired: Some(false) };
-            let nft_info:AllNftInfoResponse<Metadata> =  deps.querier.query_wasm_smart(nft_contract, &msg)?;
-
+            let msg = Cw721QueryMsg::AllNftInfo {
+                token_id: token_id.clone(),
+                include_expired: Some(false),
+            };
+            let nft_info: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
+                nft_contract,
+                &msg
+            )?;
 
             if nft_info.access.owner != address.to_string() {
                 continue;
@@ -113,30 +117,27 @@ mod query {
                 }
                 continue;
             }
-
         }
         return Ok(Some(result_tier));
     }
 
-    fn get_tier_from_tier_contract(
-        deps: &DepsMut,
-        address: String,
-        config: &Config,
-    ) -> StdResult<u8> {
+    fn get_tier_from_tier_contract(deps: &Deps, address: String, config: &Config) -> StdResult<u8> {
         let tier_contract = config.tier_contract.to_string();
         let user_info = TierContractQuery::UserInfo { address };
 
-        if let TierResponse::UserInfo { tier } = deps.querier.query_wasm_smart(tier_contract, &user_info)? {
+        if
+            let TierResponse::UserInfo { tier } = deps.querier.query_wasm_smart(
+                tier_contract,
+                &user_info
+            )?
+        {
             Ok(tier)
         } else {
             Err(StdError::generic_err("Cannot get tier"))
         }
     }
 
-    pub fn get_tier(
-        deps: &DepsMut,
-        address: String,
-    ) -> StdResult<u8> {
+    pub fn get_tier(deps: &Deps, address: String) -> StdResult<u8> {
         let config = Config::load(deps.storage)?;
 
         let from_nft_contract = get_tier_from_nft_contract(deps, &address, &config)?;
@@ -144,22 +145,23 @@ mod query {
         let mut tier = get_tier_from_tier_contract(deps, address, &config)?;
         if let Some(nft_tier) = from_nft_contract {
             if nft_tier < tier {
-                tier = nft_tier
+                tier = nft_tier;
             }
         }
-        
 
         Ok(tier)
     }
 
-    pub fn get_min_tier(
-        deps: &DepsMut,
-        config: &Config,
-    ) -> StdResult<u8> {
+    pub fn get_min_tier(deps: &Deps, config: &Config) -> StdResult<u8> {
         let tier_contract = config.tier_contract.to_string();
         let user_info = TierContractQuery::Config {};
 
-        if let TierResponse::Config { min_tier, .. } = deps.querier.query_wasm_smart(tier_contract, &user_info)? {
+        if
+            let TierResponse::Config { min_tier, .. } = deps.querier.query_wasm_smart(
+                tier_contract,
+                &user_info
+            )?
+        {
             Ok(min_tier)
         } else {
             Err(StdError::generic_err("Cannot get min tier"))
@@ -167,11 +169,10 @@ mod query {
     }
 }
 
-
 #[cfg(test)]
 pub mod manual {
     use crate::state::Config;
-    use cosmwasm_std::{ StdResult,  DepsMut};
+    use cosmwasm_std::{ StdResult, DepsMut, Deps };
     use std::sync::Mutex;
 
     static TIER: Mutex<u8> = Mutex::new(0);
@@ -187,26 +188,20 @@ pub mod manual {
         *tier_lock = tier;
     }
 
-    pub fn get_tier(
-        _deps: &DepsMut,
-        _address: String,
-    ) -> StdResult<u8> {
+    pub fn get_tier(_deps: &Deps, _address: String) -> StdResult<u8> {
         let tier_lock = TIER.lock().unwrap();
         Ok(*tier_lock)
     }
 
-    pub fn get_min_tier(
-        _deps: &DepsMut,
-        _config: &Config,
-    ) -> StdResult<u8> {
+    pub fn get_min_tier(_deps: &Deps, _config: &Config) -> StdResult<u8> {
         let tier_lock = MIN_TIER.lock().unwrap();
         Ok(*tier_lock)
     }
 
     pub fn get_tier_from_nft_contract(
-        _deps: &DepsMut,
+        _deps: &Deps,
         _address: &String,
-        _config: &Config,
+        _config: &Config
     ) -> StdResult<Option<u8>> {
         let tier_lock = TIER.lock().unwrap();
         Ok(Some(*tier_lock))
@@ -235,9 +230,9 @@ pub use manual::get_tier_from_nft_contract;
 mod tests {
     use std::marker::PhantomData;
 
-    use cosmwasm_std::{OwnedDeps, testing::{MockStorage, MockApi, MockQuerier}};
+    use cosmwasm_std::{ OwnedDeps, testing::{ MockStorage, MockApi, MockQuerier } };
 
-    use super::manual::{get_tier, set_tier};
+    use super::manual::{ get_tier, set_tier };
 
     #[test]
     fn manual_tier() {
@@ -248,13 +243,12 @@ mod tests {
             custom_query_type: PhantomData::default(),
         };
         let address = "address".to_string();
-        let tier = get_tier(&deps.as_mut(), address.clone()).unwrap();
+        let tier = get_tier(&deps.as_mut().as_ref(), address.clone()).unwrap();
 
         for i in 1..=4 {
             set_tier(i);
-            assert_eq!(get_tier(&deps.as_mut(), address.clone()), Ok(i));
+            assert_eq!(get_tier(&deps.as_mut().as_ref(), address.clone()), Ok(i));
         }
         set_tier(tier);
     }
 }
-

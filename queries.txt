@@ -96,6 +96,8 @@ oraid q wasm contract-state smart "$IDO_CONTRACT" '{"ido_info": {"ido_id": 4}}' 
 
 oraid q wasm contract-state smart "$IDO_CONTRACT" '{"user_info": {"address": "'"$WALLET_ADDRESS"'", "ido_id" : 4}}' --home $ORAI_HOME_DIR
 
+oraid q wasm contract-state smart "$IDO_CONTRACT" '{"tier_info": {"address": "'"$WALLET_ADDRESS"'"}}' --home $ORAI_HOME_DIR
+
 oraid q wasm contract-state smart "$IDO_CONTRACT" '{"ido_amount": {}}' --home $ORAI_HOME_DIR
 
 oraid q wasm contract-state smart "$IDO_CONTRACT" '{"purchases": {"address": "'"$WALLET_ADDRESS"'", "ido_id" : 2}}' --home $ORAI_HOME_DIR
