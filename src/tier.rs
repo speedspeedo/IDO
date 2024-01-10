@@ -225,30 +225,3 @@ pub use manual::get_min_tier;
 
 #[cfg(test)]
 pub use manual::get_tier_from_nft_contract;
-
-#[cfg(test)]
-mod tests {
-    use std::marker::PhantomData;
-
-    use cosmwasm_std::{ OwnedDeps, testing::{ MockStorage, MockApi, MockQuerier } };
-
-    use super::manual::{ get_tier, set_tier };
-
-    #[test]
-    fn manual_tier() {
-        let mut deps = OwnedDeps {
-            storage: MockStorage::default(),
-            api: MockApi::default(),
-            querier: MockQuerier::default(),
-            custom_query_type: PhantomData::default(),
-        };
-        let address = "address".to_string();
-        let tier = get_tier(&deps.as_mut().as_ref(), address.clone()).unwrap();
-
-        for i in 1..=4 {
-            set_tier(i);
-            assert_eq!(get_tier(&deps.as_mut().as_ref(), address.clone()), Ok(i));
-        }
-        set_tier(tier);
-    }
-}

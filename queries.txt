@@ -18,8 +18,8 @@ RES=$(oraid tx wasm instantiate                     \
     "$IDO_CODE_ID"                                  \
     '{
         "lock_periods": [1, 1, 1, 1, 1],
-        "nft_contract": "orai1rmqthdyqs03faugttrt6kkm2u73pwfr86aqe6s6jvlwq4wqdp6vqsve3m4",
-        "tier_contract":"orai1q44nqkfcude7je0tqhu0u8mm7x8uhgj73n94k2vkx87tsr6yaujsmyayet"
+        "nft_contract": "orai1yvaq74g6fdsjzedcqszz04j8v33dmxhsrukmfx3y5xmtfl6vucpsdzxf95",
+        "tier_contract":""
     }'                                               \
     --gas auto                                    \
     --gas-adjustment 1.1          \
@@ -33,7 +33,7 @@ IDO_CONTRACT=$(echo $RES | jq -r '.logs[0].events[0].attributes[0].value')
 
 echo $IDO_CONTRACT
 
-oraid tx wasm execute "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas" '{"increase_allowance":{"spender":"'"$IDO_CONTRACT"'","amount":"10000000"}}' --from="$KEY_NAME" -b block --gas auto --gas-adjustment 1.1 --home $ORAI_HOME_DIR -y
+oraid tx wasm execute "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas" '{"increase_allowance":{"spender":"'"$IDO_CONTRACT"'","amount":"10000000000"}}' --from="$KEY_NAME" -b block --gas auto --gas-adjustment 1.1 --home $ORAI_HOME_DIR -y
 
 date -d "now + 10 minutes" +%s
 
@@ -42,15 +42,15 @@ date +%s
 oraid tx wasm execute "$IDO_CONTRACT" \
     '{
   "start_ido": {
-    "start_time": '"$(date -d "now - 1 minutes" +%s)"',
-    "end_time": '"$(date -d "now + 1 minutes" +%s)"',
-    "total_amount": "1000000",
+    "start_time": '"$(date -d "now - 5 minutes" +%s)"',
+    "end_time": '"$(date -d "now + 1000000 minutes" +%s)"',
+    "total_amount": "10000000000",
     "tokens_per_tier": [
-      "400000000000",
-      "300000000000",
-      "150000000000",
-      "100000000000",
-      "50000000000"
+      "4000000000",
+      "3000000000",
+      "1500000000",
+      "1000000000",
+      "500000000"
     ],
     "price": "50",
     "token_contract": "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas",
@@ -58,7 +58,7 @@ oraid tx wasm execute "$IDO_CONTRACT" \
     "whitelist": {
       "shared": {}
     },
-    "soft_cap": "1000"
+    "soft_cap": "50000"
   }
 }'   \
 --gas auto                                    \

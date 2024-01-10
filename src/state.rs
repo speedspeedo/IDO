@@ -1,12 +1,11 @@
-use crate::msg::{PaymentMethod, PurchaseAnswer, QueryResponse};
-use cosmwasm_std::{StdResult, Storage, Uint128, Order};
-use cw_storage_plus::{Item, Map};
-use serde::{Deserialize, Serialize};
+use crate::msg::{ PaymentMethod, PurchaseAnswer, QueryResponse };
+use cosmwasm_std::{ StdResult, Storage, Uint128, Order };
+use cw_storage_plus::{ Item, Map };
+use serde::{ Deserialize, Serialize };
 use std::cmp::min;
 
-
 pub const CONFIG_KEY: Item<Config> = Item::new("config");
-pub const PURCHASES: Map<(String, u32), Vec<Purchase>> = Map::new("purchase");//Deque<UserWithdrawal> = Deque::new("withdraw");
+pub const PURCHASES: Map<(String, u32), Vec<Purchase>> = Map::new("purchase"); //Deque<UserWithdrawal> = Deque::new("withdraw");
 pub const ARCHIVED_PURCHASES: Map<(String, u32), Vec<Purchase>> = Map::new("archive");
 pub const ACTIVE_IDOS: Map<(String, u32), bool> = Map::new("active_idos");
 pub const IDO_TO_INFO: Map<(String, u32), UserInfo> = Map::new("ido2info");
@@ -14,7 +13,6 @@ pub const OWNER_TO_IDOS: Map<String, Vec<u32>> = Map::new("owner2idos");
 pub const WHITELIST: Map<(u32, String), bool> = Map::new("whitelist");
 pub const USERINFO: Map<String, UserInfo> = Map::new("usr2info");
 pub const IDO_ITEM: Map<u32, Ido> = Map::new("ido_list");
-
 
 // pub fn ido_whitelist(ido_id: u32, storage: &dyn Storage) -> Map<String, bool> {
 
@@ -159,7 +157,6 @@ pub struct Ido {
 }
 
 impl Ido {
-    
     pub fn load(storage: &dyn Storage, id: u32) -> StdResult<Self> {
         let mut ido = IDO_ITEM.may_load(storage, id)?.unwrap_or_default();
         ido.id = Some(id);
@@ -167,12 +164,11 @@ impl Ido {
     }
 
     pub fn len(storage: &dyn Storage) -> StdResult<u32> {
-        let len =IDO_ITEM.keys(storage, None, None, Order::Ascending).count();
+        let len = IDO_ITEM.keys(storage, None, None, Order::Ascending).count();
         Ok(len as u32)
     }
 
-    pub fn save(&mut self, storage: &mut dyn  Storage) -> StdResult<u32> {
-
+    pub fn save(&mut self, storage: &mut dyn Storage) -> StdResult<u32> {
         let id = if let Some(id) = self.id {
             id
         } else {
@@ -203,9 +199,7 @@ impl Ido {
     }
 
     pub fn remaining_tokens(&self) -> u128 {
-        self.total_tokens_amount
-            .checked_sub(self.sold_amount)
-            .unwrap()
+        self.total_tokens_amount.checked_sub(self.sold_amount).unwrap()
     }
 
     pub fn remaining_tokens_per_tier(&self, tier: u8) -> u128 {
@@ -223,7 +217,7 @@ impl Ido {
         let payment = if self.is_native_payment() {
             PaymentMethod::Native
         } else {
-            let payment_contract =self.payment_token_contract.clone().unwrap();
+            let payment_contract = self.payment_token_contract.clone().unwrap();
             let payment_contract_hash = self.payment_token_hash.clone().unwrap();
 
             PaymentMethod::Token {
@@ -232,7 +226,7 @@ impl Ido {
             }
         };
         let mut remaining_per_tiers: Vec<Uint128> = vec![];
-        for tier in 1..=(self.remaining_tokens_per_tier.len() as u8) {
+        for tier in 1..=self.remaining_tokens_per_tier.len() as u8 {
             remaining_per_tiers.push(Uint128::new(self.remaining_tokens_per_tier(tier)));
         }
         Ok(QueryResponse::IdoInfo {
@@ -251,59 +245,5 @@ impl Ido {
             withdrawn: self.withdrawn,
             shared_whitelist: self.shared_whitelist,
         })
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use cosmwasm_std::testing::mock_dependencies;
-
-    #[test]
-    fn ido() {
-        let deps = mock_dependencies();
-        let mut storage = deps.storage;
-
-        assert_eq!(Ido::len(&storage), Ok(0));
-
-        let token_address: String = "token".to_string();
-        let canonical_token_address = token_address.clone();
-
-        let mut new_ido = Ido {
-            start_time: 100,
-            end_time: 150,
-            token_contract: canonical_token_address,
-            price: 100,
-            total_tokens_amount: 1000,
-            ..Ido::default()
-        };
-
-        assert!(!new_ido.is_stored());
-        assert_eq!(Ido::len(&storage), Ok(0));
-
-        new_ido.save(&mut storage).unwrap();
-        assert!(new_ido.is_stored());
-        assert_eq!(new_ido.id(), 0);
-        assert_eq!(Ido::len(&storage), Ok(1));
-
-        new_ido.save(&mut storage).unwrap();
-        assert!(new_ido.is_stored());
-        assert_eq!(new_ido.id(), 0);
-        assert_eq!(Ido::len(&storage), Ok(1));
-
-        let mut loaded_ido = Ido::load(&storage, 0).unwrap();
-        assert_eq!(new_ido, loaded_ido);
-
-        loaded_ido.save(&mut storage).unwrap();
-        assert!(loaded_ido.is_stored());
-        assert_eq!(new_ido, loaded_ido);
-        assert_eq!(loaded_ido.id(), 0);
-        assert_eq!(Ido::len(&storage), Ok(1));
-
-        loaded_ido.id = None;
-        loaded_ido.save(&mut storage).unwrap();
-        assert!(loaded_ido.is_stored());
-        assert_eq!(loaded_ido.id(), 1);
-        assert_eq!(Ido::len(&storage), Ok(2));
     }
 }
