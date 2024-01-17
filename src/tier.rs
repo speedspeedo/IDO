@@ -1,6 +1,6 @@
 mod query {
     use crate::{ msg::{ ContractStatus, ValidatorWithWeight }, state::Config };
-    use cosmwasm_std::{ StdError, StdResult, Uint128, DepsMut, Deps };
+    use cosmwasm_std::{ StdError, StdResult, Uint128, Deps };
     use cw721::{ AllNftInfoResponse, TokensResponse, Cw721QueryMsg };
     use schemars::JsonSchema;
     // use secret_toolkit_snip721::{
@@ -172,7 +172,7 @@ mod query {
 #[cfg(test)]
 pub mod manual {
     use crate::state::Config;
-    use cosmwasm_std::{ StdResult, DepsMut, Deps };
+    use cosmwasm_std::{ StdResult, Deps };
     use std::sync::Mutex;
 
     static TIER: Mutex<u8> = Mutex::new(0);
