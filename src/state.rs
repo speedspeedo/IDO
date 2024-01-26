@@ -14,54 +14,6 @@ pub const WHITELIST: Map<(u32, String), bool> = Map::new("whitelist");
 pub const USERINFO: Map<String, UserInfo> = Map::new("usr2info");
 pub const IDO_ITEM: Map<u32, Ido> = Map::new("ido_list");
 
-// pub fn ido_whitelist(ido_id: u32, storage: &dyn Storage) -> Map<String, bool> {
-
-//     let key = format!("whitelist_{}", ido_id);
-
-//     WHITELIST
-//         .may_load(storage, ido_id)?
-//         .unwrap_or(Map::new(&key))
-// }
-
-// pub fn active_ido_list(user: &String, storage: &dyn Storage) -> Map<'static,u32, bool> {
-//     let key = format!("active_idos_{}", user);
-
-//     ACTIVE_IDOS
-//         .may_load(storage, user)?
-//         .unwrap_or(Map::new(&key))
-
-// }
-
-// pub fn user_info() -> Map<'static, String, UserInfo> {
-//     return USERINFO;
-// }
-
-// pub fn user_info_in_ido(user: &String, storage: &dyn Storage) -> Map<'static, u32, UserInfo> {
-//     let key = format!("ido2info_{}", user);
-
-//     IDO_TO_INFO
-//         .may_load(storage, user)?
-//         .unwrap_or(Map::new(&key))
-// }
-
-// pub fn purchases(user: &String, ido_id: u32, storage: &dyn Storage) -> Vec<Purchase> {
-//     let key = format!("purchase_{}", user);
-
-//     PURCHASES
-//         .may_load(storage, (user, ido_id))?
-//         .unwrap_or(Vec::new())
-// }
-
-// pub fn archived_purchases(user: &String, ido_id: u32, storage: &dyn Storage) -> Vec<Purchase> {
-//     ARCHIVED_PURCHASES
-//         .add_suffix(user.as_slice())
-//         .add_suffix(&ido_id.to_le_bytes())
-// }
-
-// pub fn ido_list_owned_by(ido_admin: &String, storage: &dyn Storage) -> Vec<u32> {
-//     OWNER_TO_IDOS.add_suffix(ido_admin.as_slice())
-// }
-
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Config {
     pub admin: String,

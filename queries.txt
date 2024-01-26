@@ -19,21 +19,21 @@ RES=$(oraid tx wasm instantiate                     \
     '{
         "lock_periods": [1, 1, 1, 1, 1],
         "nft_contract": "orai1yvaq74g6fdsjzedcqszz04j8v33dmxhsrukmfx3y5xmtfl6vucpsdzxf95",
-        "tier_contract":""
+        "tier_contract":"orai1fg0fgh353xt58k2sa00umwqftdgyzp0fy4zxyrhdqcvytxs0qwlslwcsxc"
     }'                                               \
     --gas auto                                    \
     --gas-adjustment 1.1          \
     --gas-prices 0.1orai     \
     --no-admin     \
-    --from "$KEY_NAME"                                 \
+    --from ttt                                 \
     --label "YOUI"                            \
-    -y --home $ORAI_HOME_DIR)
+    -y --home ~/.oraid)
 
 IDO_CONTRACT=$(echo $RES | jq -r '.logs[0].events[0].attributes[0].value')
 
 echo $IDO_CONTRACT
 
-oraid tx wasm execute "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas" '{"increase_allowance":{"spender":"'"$IDO_CONTRACT"'","amount":"10000000000"}}' --from="$KEY_NAME" -b block --gas auto --gas-adjustment 1.1 --home $ORAI_HOME_DIR -y
+oraid tx wasm execute "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas" '{"increase_allowance":{"spender":"'"$IDO_CONTRACT"'","amount":"10000000000"}}' --from=ttt -b block --gas auto --gas-adjustment 1.1 --home ~/.oraid -y
 
 date -d "now + 10 minutes" +%s
 
@@ -53,7 +53,7 @@ oraid tx wasm execute "$IDO_CONTRACT" \
       "500000000"
     ],
     "price": "50",
-    "token_contract": "orai1sthrn5ep8ls5vzz8f9gp89khhmedahhdqd244dh9uqzk3hx2pzrsrpzcas",
+    "token_contract": "orai1laj3d4zledty0r0vd7m3gem4cd7cyk09m608863p3t7p6sm6xmusru4l5p",
     "payment": "native",
     "whitelist": {
       "shared": {}
@@ -63,8 +63,8 @@ oraid tx wasm execute "$IDO_CONTRACT" \
 }'   \
 --gas auto                                    \
     --gas-adjustment 1.1          \
-    --from "$KEY_NAME"                                 \
-    --home $ORAI_HOME_DIR --yes
+    --from ttt                                 \
+    --home ~/.oraid -y
 
 
 

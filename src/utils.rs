@@ -1,10 +1,5 @@
-use crate::{
-    msg::ContractStatus,
-    state::{ Config, Ido, CONFIG_KEY, WHITELIST},
-};
-use cosmwasm_std::{
-    Coin,  StdError, StdResult, Storage, DepsMut,
-};
+use crate::{ msg::ContractStatus, state::{ Config, Ido, CONFIG_KEY, WHITELIST } };
+use cosmwasm_std::{ Coin, StdError, StdResult, Storage, DepsMut };
 
 pub fn assert_contract_active(storage: &dyn Storage) -> StdResult<()> {
     let config = Config::load(storage)?;
@@ -17,10 +12,7 @@ pub fn assert_contract_active(storage: &dyn Storage) -> StdResult<()> {
     Ok(())
 }
 
-pub fn assert_admin(
-    deps: &DepsMut,
-    address: &String,
-) -> StdResult<()> {
+pub fn assert_admin(deps: &DepsMut, address: &String) -> StdResult<()> {
     let canonical_admin = address.clone();
     let config = CONFIG_KEY.load(deps.storage)?;
 
@@ -31,11 +23,7 @@ pub fn assert_admin(
     Ok(())
 }
 
-pub fn assert_ido_admin(
-    deps: &DepsMut,
-    address: &String,
-    ido_id: u32,
-) -> StdResult<()> {
+pub fn assert_ido_admin(deps: &DepsMut, address: &String, ido_id: u32) -> StdResult<()> {
     let canonical_admin = address.clone();
     let ido = Ido::load(deps.storage, ido_id)?;
 
@@ -46,11 +34,7 @@ pub fn assert_ido_admin(
     Ok(())
 }
 
-pub fn in_whitelist(
-    storage: &dyn Storage,
-    address: &String,
-    ido_id: u32,
-) -> StdResult<bool> {
+pub fn in_whitelist(storage: &dyn Storage, address: &String, ido_id: u32) -> StdResult<bool> {
     let canonical_address = address.clone();
 
     let whitelist_status = WHITELIST.may_load(storage, (ido_id, canonical_address))?;
